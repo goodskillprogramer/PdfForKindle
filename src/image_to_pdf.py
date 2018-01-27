@@ -1,50 +1,20 @@
-import glob  
 import os  
-import re  
 
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4, portrait, landscape
-from reportlab.lib.pagesizes import A4, landscape  
+from image_split import ClipType
+from reportlab.lib.pagesizes import A4, landscape ,portrait 
 # from PIL import Image
-from reportlab.platypus import SimpleDocTemplate, flowables, Paragraph,  Image,PageBreak  
+from reportlab.platypus import SimpleDocTemplate,   Image,PageBreak  
 from reportlab.platypus import PageTemplate, Frame  
-  
-  
-#----------------------------------------------------------------------  
 
-def sorted_nicely( l ):   
-    """  
-    # http://stackoverflow.com/questions/2669059/how-to-sort-alpha-numeric-set-in-python 
-  
-    Sort the given iterable in the way that humans expect. 
-    """   
-    convert = lambda text: int(text) if text.isdigit() else text   
-    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]   
-    return sorted(l, key = alphanum_key)  
-  
-def convert_image_to_pdf(img_path, pdf_path):
-    img = Image.open(img_path)
-    (w0, h0) = img.size
-    if w0 > h0:
-        (w, h) = landscape(A4)
-        c = canvas.Canvas(pdf_path, pagesize = landscape(A4))
-        c.drawImage(img_path, 0, 0, w, h)
-        c.showPage()
-        c.save()
+#----------------------------------------------------------------------  
+def create_pdf(filename, path,page,cliptype,imageformat):  
+    """
+    """      
+    
+    if cliptype == ClipType.ALL:
+        width,height = portrait(A4)  
     else:
-        (w, h) = portrait(A4)
-        c = canvas.Canvas(pdf_path, pagesize = portrait(A4))
-        c.drawImage(img_path, 0, 0, w, h)
-        
-        c.showPage()
-        c.save()
-
-
-#----------------------------------------------------------------------  
-def create_pdf(savepath,fname, path,page):  
-    """"""  
-    filename = os.path.join(savepath, fname + ".pdf")  
-    width,height = portrait(A4)  
+        width,height = landscape(A4)  
     
     print("width = %d, height = %d\n" % (width, height))  
       
@@ -55,22 +25,26 @@ def create_pdf(savepath,fname, path,page):
 
     for page in range(page):
         print 'create_pdf',page
-        if os.path.exists(os.path.join(path,'{0}.{1}'.format(page,'1.jpg'))):
-            Story.append(Image(os.path.join(path,'{0}.{1}'.format(page,'1.jpg')), height, width))  
+        image1 = os.path.join(path,'{0}.{1}.{2}'.format(page,'1',imageformat))
+        image2 = os.path.join(path,'{0}.{1}.{2}'.format(page,'2',imageformat))
+        image3 = os.path.join(path,'{0}.{1}.{2}'.format(page,'3',imageformat))
+        if os.path.exists(image1) and os.stat(image1).st_size:
+            Story.append(Image(image1, height, width))
             Story.append(PageBreak())  
-        if os.path.exists(os.path.join(path,'{0}.{1}'.format(page,'2.jpg'))):
-            Story.append(Image(os.path.join(path,'{0}.{1}'.format(page,'2.jpg')), height, width))  
+        if os.path.exists(image2) and os.stat(image2).st_size:
+            Story.append(Image(image2, height, width))
             Story.append(PageBreak())  
-        if os.path.exists(os.path.join(path,'{0}.{1}'.format(page,'3.jpg'))):
-            Story.append(Image(os.path.join(path,'{0}.{1}'.format(page,'3.jpg')), height, width))  
+        if os.path.exists(image3) and os.stat(image3).st_size:
+            Story.append(Image(image3, height, width))
             Story.append(PageBreak())  
 
     doc.build(Story)  
     print "%s created" % filename  
 #----------------------------------------------------------------------  
 if __name__ == "__main__":  
-    path = r"./tmp/clip/book_image_half"  
-    savepath=r"./tmp/clip"
+    cliptype=ClipType.MARGIN_ONLY
+    pdfsavepath = r".\tmp\pdf\484d8037a509648a8e09fc0466b06f38\tongjixuexifangfa{0}.pdf".format(cliptype)  
+    subimagepath = r".\tmp\pdf\484d8037a509648a8e09fc0466b06f38\subimage{0}".format(cliptype)  
+    
+    create_pdf(pdfsavepath, subimagepath, 20, cliptype, 'jpg')
 
-#     convert_image_to_pdf(front_cover,'./tmp/pdf.pdf')
-    create_pdf(savepath,"page30",path)  
